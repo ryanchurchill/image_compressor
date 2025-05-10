@@ -1,5 +1,6 @@
 package com.simplecodec;
 
+import com.simplecodec.utils.Assert;
 import java.io.*;
 import java.util.*;
 
@@ -7,7 +8,7 @@ public class PPMImageHandler {
     
     /**
      * Reads a PPM file and converts it to a 3D double array.
-     * Supports both P3 (ASCII) and P6 (binary) PPM formats.
+     * Supports P3 (ASCII) format only
      * 
      * @param filePath Path to the PPM file
      * @return 3D array with dimensions [height][width][3] with RGB values normalized to 0.0-1.0
@@ -20,8 +21,8 @@ public class PPMImageHandler {
             
             // Read the PPM header
             String magic = reader.readLine();
-            boolean isBinary = magic.equals("P6");
-            
+            Assert.isTrue(magic.equals("P3"));
+
             // Skip comments
             String line;
             do {
@@ -39,36 +40,19 @@ public class PPMImageHandler {
             
             double[][][] image = new double[height][width][3];
             
-            if (isBinary) {
-                // For P6 format (binary)
-                byte[] pixels = new byte[width * height * 3];
-                fis.getChannel().position(fis.getChannel().position() + 1); // Skip one byte after header
-                fis.read(pixels);
-                
-                int idx = 0;
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        for (int c = 0; c < 3; c++) {
-                            int value = pixels[idx++] & 0xff;
+            // For P3 format (ASCII)
+            Scanner scanner = new Scanner(reader);
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    for (int c = 0; c < 3; c++) {
+                        if (scanner.hasNextInt()) {
+                            int value = scanner.nextInt();
                             image[y][x][c] = (double)value / maxVal;
                         }
                     }
                 }
-            } else {
-                // For P3 format (ASCII)
-                Scanner scanner = new Scanner(reader);
-                for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        for (int c = 0; c < 3; c++) {
-                            if (scanner.hasNextInt()) {
-                                int value = scanner.nextInt();
-                                image[y][x][c] = (double)value / maxVal;
-                            }
-                        }
-                    }
-                }
             }
-            
+
             return image;
         }
     }

@@ -1,7 +1,6 @@
 package com.simplecodec;
 
-import com.simplecodec.ColorSpaceConverter;
-import com.simplecodec.PPMImageHandler;
+import com.simplecodec.image.Image;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,26 +13,26 @@ public class Main {
             String filePath = "images/red_half.ppm.txt";
             
             // Read the PPM file
-            PPMImageHandler handler = new PPMImageHandler();
-            double[][][] rgbImage = handler.readPPM(filePath);
-            
-            System.out.println("Image loaded: " + rgbImage[0].length + "x" + rgbImage.length);
+            Image originalRgbImage = Image.createRgbFromPpm(filePath);
+            System.out.println("Image loaded");
+
             
             // Convert RGB to YUV
-            ColorSpaceConverter converter = new ColorSpaceConverter();
-            double[][][] yuvImage = converter.rgbToYuv(rgbImage);
+            Image yuvImage = Image.copyImage(originalRgbImage);
+            yuvImage.convertToYuv();
             System.out.println("Converted to YUV");
             
             // Convert back to RGB
-            double[][][] convertedRgbImage = converter.yuvToRgb(yuvImage);
+            Image twiceConvertedRgbImage = Image.copyImage(yuvImage);
+            twiceConvertedRgbImage.convertToRgb();
             System.out.println("Converted back to RGB");
             
             // Display the original and converted images
-            displayImages(rgbImage, convertedRgbImage);
+            displayImages(originalRgbImage, twiceConvertedRgbImage);
             
             // Optionally save the converted image
-            handler.writePPM(convertedRgbImage, "converted.ppm");
-            System.out.println("Converted image saved to converted.ppm");
+//            handler.writePPM(convertedRgbImage, "converted.ppm");
+//            System.out.println("Converted image saved to converted.ppm");
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -45,23 +44,23 @@ public class Main {
      * @param original
      * @param twiceConverted
      */
-    private static void displayImages(double[][][] original, double[][][] twiceConverted) {
-        int height = original.length;
-        int width = original[0].length;
+    private static void displayImages(Image original, Image twiceConverted) {
+        int height = original.getHeight();
+        int width = original.getWidth();
         
         BufferedImage origImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         BufferedImage convImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int r1 = clip((int)(original[y][x][0] * 255));
-                int g1 = clip((int)(original[y][x][1] * 255));
-                int b1 = clip((int)(original[y][x][2] * 255));
+                int r1 = clip((int)(original.getR(x, y) * 255));
+                int g1 = clip((int)(original.getG(x, y) * 255));
+                int b1 = clip((int)(original.getB(x, y) * 255));
                 origImg.setRGB(x, y, (r1 << 16) | (g1 << 8) | b1);
                 
-                int r2 = clip((int)(twiceConverted[y][x][0] * 255));
-                int g2 = clip((int)(twiceConverted[y][x][1] * 255));
-                int b2 = clip((int)(twiceConverted[y][x][2] * 255));
+                int r2 = clip((int)(twiceConverted.getR(x, y) * 255));
+                int g2 = clip((int)(twiceConverted.getG(x, y) * 255));
+                int b2 = clip((int)(twiceConverted.getB(x, y) * 255));
                 convImg.setRGB(x, y, (r2 << 16) | (g2 << 8) | b2);
             }
         }

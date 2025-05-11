@@ -10,8 +10,9 @@ public class Main {
     public static void main(String[] args) {
         try {
             // Example file path - replace with an actual PPM file path
-            String filePath = "images/red_half.ppm.txt";
-            
+//            String filePath = "images/red_half.ppm.txt";
+            String filePath = "images/picnicsmaller.ppm.txt";
+
             // Read the PPM file
             Image originalRgbImage = Image.createRgbFromPpm(filePath);
             System.out.println("Image loaded");
